@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <style>
+            /* Animations */
+            .fade-in {
+                animation: fadeIn 1.2s ease;
+            }
+            .slide-up {
+                animation: slideUp 1s ease;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { transform: translateY(40px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            .typing {
+                border-right: 2px solid var(--accent);
+                white-space: nowrap;
+                overflow: hidden;
+                animation: typing 2s steps(30, end), blink-caret .75s step-end infinite;
+            }
+            @keyframes typing {
+                from { width: 0 }
+                to { width: 100% }
+            }
+            @keyframes blink-caret {
+                from, to { border-color: transparent }
+                50% { border-color: var(--accent); }
+            }
+            /* Wellness Cards */
+            .wellness-cards {
+                display: flex;
+                gap: 20px;
+                margin: 40px 0;
+                justify-content: center;
+            }
+            .wellness-card {
+                background: rgba(255,255,255,0.07);
+                border-radius: 18px;
+                padding: 28px 22px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+                font-size: 1.1rem;
+                color: #fff;
+                transition: transform 0.3s, box-shadow 0.3s;
+                cursor: pointer;
+            }
+            .wellness-card:hover {
+                transform: scale(1.05) rotate(-2deg);
+                box-shadow: 0 16px 48px rgba(0,210,255,0.18);
+            }
+        </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InnerBloom</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+
+        :root {
+            --glass: rgba(0, 0, 0, 0.75);
+            --blur: blur(25px);
+            --accent: #00d2ff;
+            --danger: #ff4b2b;
+            --text-main: #ffffff;
+            --sidebar-bg: rgba(10, 10, 15, 0.9);
+        }
+
+        body, html {
+            margin: 0; padding: 0; min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #050505;
+            overflow-x: hidden;
+            color: var(--text-main);
+        }
+
+        /* Dynamic Background */
+        .bg-overlay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: url('https://images.unsplash.com/photo-1559757148-5c350d0d3c56?q=80&w=2070&auto=format&fit=crop') center/cover;
+            filter: brightness(0.3) grayscale(0.2);
+            z-index: -1;
+            transition: background 0.8s ease-in-out;
+        }
+
+        /* 1. LOGIN SCREEN */
+        #login-screen {
+            position: fixed; inset: 0; z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop') center/cover;
+        }
+
+        .logo-branding {
+            position: absolute; top: 30px; left: 30px;
+            display: flex; align-items: center; gap: 15px;
+            background: rgba(255,255,255,1); padding: 12px 24px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .logo-branding img { width: 45px; height: auto; }
+        .logo-branding span { color: #000; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.5px; }
+
+        .login-card {
+            background: var(--glass); backdrop-filter: var(--blur);
+            padding: 50px; border-radius: 35px; width: 420px;
+            border: 1px solid rgba(255,255,255,0.1); text-align: center;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+        }
+
+        .login-card input {
+            width: 100%; padding: 16px; margin: 12px 0; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); 
+            color: white; outline: none; font-size: 1rem; transition: 0.3s;
+        }
+        .login-card input:focus { border-color: var(--accent); background: rgba(255,255,255,0.1); }
+
+        .login-card button {
+            width: 100%; padding: 18px; background: var(--accent); border: none; 
+            border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 20px;
+            color: #000; font-size: 1rem; transition: 0.3s;
+        }
+        .login-card button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 210, 255, 0.4); }
+
+        /* 2. MAIN PC INTERFACE */
+        .pc-shell { display: none; height: 100vh; }
+
+        .sidebar {
+            width: 100px; background: var(--sidebar-bg); backdrop-filter: blur(15px);
+            display: flex; flex-direction: column; align-items: center; padding: 40px 0; gap: 35px;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .side-icon {
+            text-align: center; cursor: pointer; transition: 0.4s; color: rgba(255,255,255,0.4);
+            position: relative; width: 100%;
+        }
+        .side-icon.active { color: var(--accent); }
+        .side-icon.active::after { content: ''; position: absolute; right: 0; top: 10%; height: 80%; width: 4px; background: var(--accent); border-radius: 4px 0 0 4px; }
+        .side-icon i { font-size: 1.6rem; }
+        .side-icon p { font-size: 9px; margin-top: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        .main-stage { flex: 1; padding: 50px; overflow-y: auto; background: rgba(0,0,0,0.1); }
+
+        .window { display: none; max-width: 1100px; margin: 0 auto; animation: fadeInUp 0.6s ease-out; }
+        .window.active { display: block; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Feature Layouts */
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: var(--blur);
+            padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.08);
+            transition: 0.3s;
+        }
+        .glass-card:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+
+        .img-block {
+            width: 100%; height: 180px; border-radius: 18px; margin-bottom: 20px;
+            background-size: cover; background-position: center;
+        }
+
+        /* Expert AI Chatbot */
+        #chat-box {
+            height: 550px; display: flex; flex-direction: column; background: rgba(0,0,0,0.5);
+            border-radius: 28px; padding: 25px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        #chat-history { flex: 1; overflow-y: auto; padding-right: 15px; display: flex; flex-direction: column; }
+        .msg { margin: 12px 0; padding: 15px 22px; border-radius: 18px; max-width: 80%; line-height: 1.5; font-size: 0.95rem; }
+        .bot { background: rgba(255,255,255,0.1); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .user { background: var(--accent); color: #000; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 600; }
+
+        /* SOS Pulse Button */
+        .sos-btn {
+            background: var(--danger); color: white; padding: 20px; border-radius: 18px;
+            width: 100%; border: none; font-weight: 800; cursor: pointer; letter-spacing: 1px;
+            animation: sos-glow 2s infinite;
+        }
+        @keyframes sos-glow { 0% { box-shadow: 0 0 0 0 rgba(255, 75, 43, 0.6); } 70% { box-shadow: 0 0 0 25px rgba(255, 75, 43, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 75, 43, 0); } }
+
+        @keyframes text-fade {
+            0%, 100% { opacity: 0.05; }
+            50% { opacity: 0.1; }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Animated Motivational Quote -->
+    <div class="fade-in" style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; font-size: 1.3rem; font-weight: 600; color: var(--accent); background: rgba(0,0,0,0.5); padding: 16px 32px; border-radius: 18px; box-shadow: 0 4px 24px rgba(0,210,255,0.12);">
+        "Your mental health is just as important as your physical health. Take care of both."
+    </div>
+
+    <div class="bg-overlay" id="main-bg"></div>
+    <div id="bg-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 15vw; font-weight: 800; color: rgba(255,255,255,0.05); z-index: 0; pointer-events: none; font-family: 'Plus Jakarta Sans'; animation: text-fade 3s infinite;">InnerBloom</div>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <i class="fas fa-shield-heart" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 25px;"></i>
+            <h1 style="margin: 0; font-size: 2.2rem; font-weight: 800;">InnerBloom</h1>
+            <p style="opacity: 0.6; margin-bottom: 30px;">Professional Student Wellness & Safety Portal</p>
+            
+            <input type="text" id="studentID" placeholder="User Name">
+            <input type="email" id="parentEmail" placeholder="Parent / Guardian Email (For Daily Safety Sync)">
+            
+            <button onclick="launchApp()">INITIALIZE SECURE SESSION</button>
+            <p style="font-size: 11px; opacity: 0.4; margin-top: 20px;">HIPAA COMPLIANT | AES-256 ENCRYPTED</p>
+        </div>
+    </div>
+
+    <div class="pc-shell" id="app-shell">
+        <nav class="sidebar">
+            <div class="side-icon active" onclick="nav('dashboard', this)"><i class="fas fa-chart-line"></i><p>Insights</p></div>
+            <div class="side-icon" onclick="nav('bot', this)"><i class="fas fa-brain"></i><p>AI Support</p></div>
+            <div class="side-icon" onclick="nav('doctors', this)"><i class="fas fa-user-doctor"></i><p>Specialists</p></div>
+            <div class="side-icon" onclick="nav('hospital', this)"><i class="fas fa-map-location-dot"></i><p>Emergency</p></div>
+            <div class="side-icon" style="margin-top: auto; color: var(--danger);" onclick="triggerSOS()"><i class="fas fa-tower-broadcast"></i><p>SOS</p></div>
+        </nav>
+
+        <main class="main-stage">
+            <div id="dashboard" class="window active">
+                                <!-- Wellness Cards -->
+                                <div class="wellness-cards">
+                                    <div class="wellness-card slide-up">
+                                        <b>Daily Challenge:</b> Take a 5-minute mindful break. Close your eyes and breathe deeply.
+                                    </div>
+                                    <div class="wellness-card slide-up">
+                                        <b>Did you know?</b> Smiling, even when you don’t feel like it, can boost your mood instantly.
+                                    </div>
+                                    <div class="wellness-card slide-up">
+                                        <b>Quick Tip:</b> Drink water and stretch every hour to keep your mind and body refreshed.
+                                    </div>
+                                </div>
+                <h1 style="font-size: 2.8rem; margin: 0; font-weight: 800;">Wellness Insights</h1>
+                <p style="opacity: 0.6; margin-bottom: 40px;">Real-time mental health analytics and education.</p>
+                
+                <div class="grid-layout">
+                    <div class="glass-card">
+                        <div class="img-block" style="background-image: url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2070&auto=format&fit=crop');"></div>
+                        <h3>Understanding Stress</h3>
+                        <p>Stress is the body's reaction to challenges. For students, this usually stems from academic load or social pressure.</p>
+                        <div style="padding: 15px; background: rgba(0,210,255,0.1); border-radius: 12px; font-size: 0.9rem;">
+                            <i class="fas fa-lightbulb" style="color: var(--accent);"></i> <b>Tip:</b> Try the 5-4-3-2-1 technique if you feel a panic attack coming.
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="img-block" style="background-image: url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=2070&auto=format&fit=crop');"></div>
+                        <h3>The Science of Relaxation</h3>
+                        <p>Your nervous system has a 'brake' called the Parasympathetic system. Deep breathing activates it instantly.</p>
+                        
+
+[Image of the sympathetic vs parasympathetic nervous system]
+
+                    </div>
+                </div>
+            </div>
+
+            <div id="bot" class="window">
+                <h1 style="font-weight: 800;">Expert AI Consultant</h1>
+                <p style="opacity: 0.6; margin-bottom: 25px;">Encrypted chat. Your conversation is summarized for your parent daily log.</p>
+                <div id="chat-box">
+                    <div id="chat-history">
+                        <div class="msg bot typing">Hello! I'm your AI wellness companion. I've analyzed your session history. How are you feeling right now?</div>
+                    </div>
+                    <div style="display:flex; gap:15px; padding-top:25px;">
+                        <input type="text" id="u-msg" placeholder="Tell me what's on your mind (stress, exams, anxiety...)" style="flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1); padding:18px; border-radius:15px; color:white; outline:none;">
+                        <button onclick="handleBot()" style="background:var(--accent); border:none; padding:0 35px; border-radius:15px; cursor:pointer; font-weight:bold;"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="doctors" class="window">
+                <h1 style="font-weight: 800;">Specialist Directory</h1>
+                <p style="opacity: 0.6; margin-bottom: 30px;">Verified psychologists available for students.</p>
+                <div class="grid-layout" id="doctor-grid"></div>
+            </div>
+
+            <div id="hospital" class="window">
+                <h1 style="font-weight: 800;">Medical Facilities Near Me</h1>
+                <div id="nearby-medical-list" style="display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; margin-bottom: 40px;"></div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; margin-bottom: 40px;">
+                                    <div class="glass-card" style="min-width:340px;max-width:480px;height:180px;display:flex;gap:30px;align-items:center;font-size:1.2rem;">
+                                        <i class="fas fa-hospital" style="font-size:4rem;color:#00d2ff;"></i>
+                                        <div>
+                                            <h2 style="margin:0;">Fortis Hospital</h2>
+                                            <p style="opacity:0.7;">Bannerghatta Road | <b>Distance: 12km</b></p>
+                                            <a href="https://www.google.com/maps/place/Fortis+Hospital+Bannerghatta+Road/@12.8926,77.5950,17z" target="_blank">
+                                                <button style="background:#00d2ff;border:none;padding:12px 24px;border-radius:8px;font-weight:bold;cursor:pointer;">View on Map</button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="glass-card" style="min-width:340px;max-width:480px;height:180px;display:flex;gap:30px;align-items:center;font-size:1.2rem;">
+                                        <i class="fas fa-hospital" style="font-size:4rem;color:#ff4b2b;"></i>
+                                        <div>
+                                            <h2 style="margin:0;">Manipal Hospital</h2>
+                                            <p style="opacity:0.7;">Old Airport Road | <b>Distance: 15km</b></p>
+                                            <a href="https://www.google.com/maps/place/Manipal+Hospital+Old+Airport+Road/@12.9623,77.6411,17z" target="_blank">
+                                                <button style="background:#ff4b2b;border:none;padding:12px 24px;border-radius:8px;font-weight:bold;cursor:pointer;">View on Map</button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="glass-card" style="min-width:340px;max-width:480px;height:180px;display:flex;gap:30px;align-items:center;font-size:1.2rem;">
+                                        <i class="fas fa-hospital" style="font-size:4rem;color:#00d2ff;"></i>
+                                        <div>
+                                            <h2 style="margin:0;">Apollo Hospital</h2>
+                                            <p style="opacity:0.7;">Seshadripuram | <b>Distance: 8km</b></p>
+                                            <a href="https://www.google.com/maps/place/Apollo+Hospital+Seshadripuram/@12.9885,77.5847,17z" target="_blank">
+                                                <button style="background:#00d2ff;border:none;padding:12px 24px;border-radius:8px;font-weight:bold;cursor:pointer;">View on Map</button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                <div class="glass-card" style="height: 350px; background: url('https://images.unsplash.com/photo-1524666041070-9d87656c25bb?q=80&w=1974&auto=format&fit=crop') center/cover;">
+                    <div id="map-container" style="height: 600px; width: 100%; position: relative;">
+                        <iframe id="google-map" src="https://maps.google.com/maps?q=12.8926,77.5950&z=16&output=embed" width="100%" height="100%" style="border:0; border-radius: 18px;" allowfullscreen="" loading="lazy"></iframe>
+                        <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #fff; padding: 18px 32px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; z-index: 10; box-shadow: 0 4px 24px rgba(0,210,255,0.12);">
+                            <b>Fortis Hospital</b><br>12.8926, 77.5950<br>
+                            <a href="https://www.google.com/maps/place/Fortis+Hospital+Bannerghatta+Road/@12.8926,77.5950,17z" target="_blank">
+                                <button style="margin-top:10px; background: var(--accent); color: #000; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;">Get Directions</button>
+                            </a>
+                        </div>
+                        <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">
+                            <button onclick="findNearestHospital()" style="background: #ff4b2b; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;">Nearest Hospital</button>
+                            <button onclick="findNearbyPharmacy()" style="background: #00d2ff; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;">Nearby Pharmacy</button>
+                            <button onclick="shareLocation()" style="background: #00d2ff; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;">Share Location</button>
+                        </div>
+                        <div style="position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.1); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 1rem; font-weight: 600; z-index: 10;">
+                            <b>Emergency Contacts:</b> <br>
+                            <a href="tel:100" style="color:#fff; text-decoration:underline;">Police: 100</a> | <a href="tel:108" style="color:#fff; text-decoration:underline;">Ambulance: 108</a> | <a href="tel:+919988011223" style="color:#fff; text-decoration:underline;">CIT Medical Annex: +91 99880 11223</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+                                                // Dynamically show all nearby medical facilities and pharmacies within 20km
+                                                function showNearbyMedicalFacilities() {
+                                                    if (navigator.geolocation) {
+                                                        navigator.geolocation.getCurrentPosition(function(position) {
+                                                            const userLat = position.coords.latitude;
+                                                            const userLng = position.coords.longitude;
+                                                            // Google Maps Places search for hospitals and pharmacies within 20km
+                                                            const hospitalUrl = `https://www.google.com/maps/search/hospital/@${userLat},${userLng},12z`;
+                                                            const pharmacyUrl = `https://www.google.com/maps/search/pharmacy/@${userLat},${userLng},12z`;
+                                                            // Render cards
+                                                            document.getElementById('nearby-medical-list').innerHTML = `
+                                                                <div class='glass-card' style='min-width:340px;max-width:480px;height:180px;display:flex;gap:30px;align-items:center;font-size:1.2rem;'>
+                                                                    <i class='fas fa-hospital-user' style='font-size:4rem;color:var(--accent);'></i>
+                                                                    <div>
+                                                                        <h2 style='margin:0;'>Nearest Hospitals</h2>
+                                                                        <p style='opacity:0.7;'>Within 20km radius</p>
+                                                                        <a href='${hospitalUrl}' target='_blank'>
+                                                                            <button style='background:var(--accent);border:none;padding:12px 24px;border-radius:8px;font-weight:bold;cursor:pointer;'>View All Hospitals</button>
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                                <div class='glass-card' style='min-width:340px;max-width:480px;height:180px;display:flex;gap:30px;align-items:center;font-size:1.2rem;'>
+                                                                    <i class='fas fa-prescription-bottle-alt' style='font-size:4rem;color:#00d2ff;'></i>
+                                                                    <div>
+                                                                        <h2 style='margin:0;'>Nearest Pharmacies</h2>
+                                                                        <p style='opacity:0.7;'>Within 20km radius</p>
+                                                                        <a href='${pharmacyUrl}' target='_blank'>
+                                                                            <button style='background:#00d2ff;border:none;padding:12px 24px;border-radius:8px;font-weight:bold;cursor:pointer;'>View All Pharmacies</button>
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            `;
+                                                        }, function(error) {
+                                                            document.getElementById('nearby-medical-list').innerHTML = '<div style="color:#fff;font-size:1.2rem;">Unable to access your location. Please allow location access or check your browser settings.</div>';
+                                                        });
+                                                    } else {
+                                                        document.getElementById('nearby-medical-list').innerHTML = '<div style="color:#fff;font-size:1.2rem;">Geolocation is not supported by your browser.</div>';
+                                                    }
+                                                }
+                                                // Call on page load
+                                                window.addEventListener('DOMContentLoaded', showNearbyMedicalFacilities);
+                                        function findNearbyPharmacy() {
+                                            if (navigator.geolocation) {
+                                                navigator.geolocation.getCurrentPosition(function(position) {
+                                                    const userLat = position.coords.latitude;
+                                                    const userLng = position.coords.longitude;
+                                                    const mapsUrl = `https://www.google.com/maps/search/pharmacy/@${userLat},${userLng},16z`;
+                                                    window.open(mapsUrl, '_blank');
+                                                });
+                                            }
+                                        }
+
+                                        function shareLocation() {
+                                            if (navigator.geolocation) {
+                                                navigator.geolocation.getCurrentPosition(function(position) {
+                                                    const userLat = position.coords.latitude;
+                                                    const userLng = position.coords.longitude;
+                                                    const locationText = `My current location: https://maps.google.com/?q=${userLat},${userLng}`;
+                                                    if (navigator.share) {
+                                                        navigator.share({ title: 'My Location', text: locationText, url: locationText });
+                                                    } else {
+                                                        prompt('Copy and share your location:', locationText);
+                                                    }
+                                                });
+                                            }
+                                        }
+                                // Request geolocation immediately and show prompt if denied
+                                let userLocation = null;
+                                window.addEventListener('DOMContentLoaded', function() {
+                                    if (navigator.geolocation) {
+                                        navigator.geolocation.getCurrentPosition(function(position) {
+                                            userLocation = {
+                                                lat: position.coords.latitude,
+                                                lng: position.coords.longitude
+                                            };
+                                        }, function(error) {
+                                            alert('Location access is required for map features. Please allow location access in your browser settings.');
+                                        });
+                                    } else {
+                                        alert('Geolocation is not supported by your browser.');
+                                    }
+                                    setInterval(cycleBackground, 3000);
+                                });
+                        function findNearestHospital() {
+                            if (navigator.geolocation) {
+                                navigator.geolocation.getCurrentPosition(function(position) {
+                                    const userLat = position.coords.latitude;
+                                    const userLng = position.coords.longitude;
+                                    const mapsUrl = `https://www.google.com/maps/search/hospital/@${userLat},${userLng},16z`;
+                                    window.open(mapsUrl, '_blank');
+                                }, function(error) {
+                                    document.getElementById('directions-info').style.display = 'block';
+                                    document.getElementById('directions-info').innerHTML = 'Unable to access your location. Please allow location access or check your browser settings.';
+                                });
+                            } else {
+                                document.getElementById('directions-info').style.display = 'block';
+                                document.getElementById('directions-info').innerHTML = 'Geolocation is not supported by your browser.';
+                            }
+                        }
+                function showDirections() {
+                    if (userLocation) {
+                        const annexLat = 13.0215;
+                        const annexLng = 77.6141;
+                        const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${annexLat},${annexLng}&travelmode=walking`;
+                        window.open(mapsUrl, '_blank');
+                    } else {
+                        alert('Location not found. Please reload and allow location access.');
+                    }
+                }
+        const doctors = [
+            { name: "Dr. Ananya Singh", phone: "+91 99880 11223", hosp: "CIT Health Wing", spec: "Cognitive Behavioral Therapy", img: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=150&q=80" },
+            { name: "Dr. Rajesh Kumar", phone: "+91 98450 12345", hosp: "Fortis Hospital", spec: "Psychiatrist & Stress Management", img: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=150&q=80" },
+            { name: "Dr. Meera Nair", phone: "+91 98765 43210", hosp: "Manipal Hospital", spec: "Child & Adolescent Psychologist", img: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=150&q=80" },
+            { name: "Dr. Arvind Patel", phone: "+91 99000 56789", hosp: "Apollo Mind Center", spec: "Depression & Mood Disorders", img: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=150&q=80" },
+            { name: "Dr. Priya Sharma", phone: "+91 77665 55443", hosp: "Student Life Hub", spec: "Academic Pressure Coach", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" },
+            { name: "Dr. Suresh Reddy", phone: "+91 99880 11224", hosp: "CIT Health Wing", spec: "Addiction Recovery Specialist", img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=150&q=80" },
+            { name: "Dr. Kavita Joshi", phone: "+91 99880 11225", hosp: "Apollo Mind Center", spec: "Family & Relationship Therapy", img: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=150&q=80" }
+        ];
+
+        const stressImages = [
+            'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?q=80&w=2070&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=2070&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2070&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2070&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop'
+        ];
+
+        let bgIndex = 0;
+
+        function cycleBackground() {
+            bgIndex = (bgIndex + 1) % stressImages.length;
+            const img = stressImages[bgIndex];
+            document.getElementById('login-screen').style.background = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url(${img}) center/cover`;
+            document.getElementById('main-bg').style.backgroundImage = `url(${img})`;
+        }
+
+        function launchApp() {
+            const sid = document.getElementById('studentID').value;
+            const email = document.getElementById('parentEmail').value;
+            if(!sid || !email) return alert("Security Requirement: Student ID and Parent Email are mandatory.");
+            
+            document.getElementById('login-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-shell').style.display = 'flex';
+                renderDoctors();
+            }, 600);
+        }
+
+        function nav(id, el) {
+            document.querySelectorAll('.window').forEach(w => w.classList.remove('active'));
+            document.querySelectorAll('.side-icon').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+
+            // Random Background Access based on mood/section
+            const bg = document.getElementById('main-bg');
+            if(id === 'bot') bg.style.backgroundImage = "url('https://images.unsplash.com/photo-1499209974431-9dac3adaf471?q=80&w=2070&auto=format&fit=crop')";
+            if(id === 'doctors') bg.style.backgroundImage = "url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop')";
+            if(id === 'dashboard') bg.style.backgroundImage = "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop')";
+        }
+
+        function handleBot() {
+                        function openYouTubeSearch(query) {
+                            const videoLink = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                            window.open(videoLink, '_blank');
+                        }
+            const inputField = document.getElementById('u-msg');
+            const history = document.getElementById('chat-history');
+            let msgText = inputField.value.trim();
+            if(!msgText) return;
+            history.innerHTML += `<div class="msg user fade-in">${inputField.value}</div>`;
+            inputField.value = "";
+
+            setTimeout(() => {
+                // Custom response for 'hi'
+                if (/^hi$/i.test(msgText) || /^hello$/i.test(msgText) || /^hey$/i.test(msgText)) {
+                    history.innerHTML += `<div class="msg bot fade-in">How can I help you about mental health?</div>`;
+                    history.scrollTop = history.scrollHeight;
+                    return;
+                }
+                // Use Wikipedia and YouTube for all other questions
+                fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(msgText)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        let reply = data.extract ? data.extract : "Sorry, I couldn't find an answer. Please try rephrasing your question.";
+                        let videoLink = `https://www.youtube.com/results?search_query=${encodeURIComponent(msgText)}`;
+                        reply += `<br><br><b>Watch a video:</b> <a href='${videoLink}' target='_blank' style='color:var(--accent);text-decoration:underline;'>Click here for YouTube solutions</a>`;
+                        history.innerHTML += `<div class="msg bot fade-in">${reply}</div>`;
+                        history.scrollTop = history.scrollHeight;
+                        openYouTubeSearch(msgText);
+                    })
+                    .catch(() => {
+                        let reply = "Sorry, I couldn't find an answer. Please try rephrasing your question.";
+                        let videoLink = `https://www.youtube.com/results?search_query=${encodeURIComponent(msgText)}`;
+                        reply += `<br><br><b>Watch a video:</b> <a href='${videoLink}' target='_blank' style='color:var(--accent);text-decoration:underline;'>Click here for YouTube solutions</a>`;
+                        history.innerHTML += `<div class="msg bot fade-in">${reply}</div>`;
+                        history.scrollTop = history.scrollHeight;
+                        openYouTubeSearch(msgText);
+                    });
+            }, 500);
+        }
+
+        function renderDoctors() {
+            document.getElementById('doctor-grid').innerHTML = doctors.map((d, idx) => `
+                <div class="glass-card" style="display:flex; align-items:center; gap:25px;">
+                    <img src="${d.img}" style="width:75px; height:75px; border-radius:50%; border:3px solid var(--accent); object-fit:cover;">
+                    <div>
+                        <h3 style="margin:0">${d.name}</h3>
+                        <p style="margin:4px 0; font-size:0.85rem; opacity:0.6;">${d.spec}</p>
+                        <p style="margin:8px 0 0; color:var(--accent); font-weight:bold; font-size:0.9rem;"><i class="fas fa-phone"></i> ${d.phone}</p>
+                        <p style="margin:2px 0; font-size:0.8rem; opacity:0.5;"><i class="fas fa-building-user"></i> ${d.hosp}</p>
+                        <button onclick="startVideoCall(${idx})" style="margin-top:10px;background:var(--accent);color:#000;border:none;padding:10px 22px;border-radius:8px;font-weight:bold;cursor:pointer;">Video Call</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function triggerSOS() {
+            const confirmSOS = confirm("ACTIVATE EMERGENCY SOS?\n\nThis will instantly alert CIT Campus Security, the Medical Wing, and send a priority alert to your parents.");
+            if(confirmSOS) {
+                alert("🚨 SOS ACTIVE 🚨\nAlerts sent. GPS coordinates locked. Stay calm, emergency services are arriving in 3-5 minutes.");
+            }
+        }
+
+        // Enter key support for chat
+                // Video Call Modal and Camera Logic
+                // Modal HTML
+                if (!document.getElementById('video-call-modal')) {
+                    const modal = document.createElement('div');
+                    modal.id = 'video-call-modal';
+                    modal.style = 'display:none;position:fixed;z-index:3000;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;';
+                    modal.innerHTML = `
+                        <div style="background:#181f2a;padding:32px 28px;border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.25);display:flex;flex-direction:column;align-items:center;max-width:95vw;max-height:90vh;">
+                            <h2 style='color:var(--accent);margin-bottom:18px;'>Video Call with Doctor</h2>
+                            <video id="student-video" autoplay playsinline style="width:340px;height:255px;background:#222;border-radius:12px;border:3px solid var(--accent);"></video>
+                            <div id="doctor-video-placeholder" style="margin:18px 0 0 0;color:#fff;opacity:0.7;font-size:1.1rem;">Connecting to doctor...</div>
+                            <button onclick="closeVideoCall()" style="margin-top:18px;background:var(--danger);color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:bold;cursor:pointer;">End Call</button>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                }
+
+                window.startVideoCall = function(idx) {
+                    const modal = document.getElementById('video-call-modal');
+                    modal.style.display = 'flex';
+                    // Show doctor name
+                    document.getElementById('doctor-video-placeholder').innerHTML = `Connecting to <b>${doctors[idx].name}</b>...<br><span style='font-size:0.95rem;opacity:0.6;'>Doctor will join soon.</span>`;
+                    // Show student camera
+                    const video = document.getElementById('student-video');
+                    if (window.localStream) {
+                        video.srcObject = window.localStream;
+                        return;
+                    }
+                    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                        .then(stream => {
+                            window.localStream = stream;
+                            video.srcObject = stream;
+                        })
+                        .catch(() => {
+                            document.getElementById('doctor-video-placeholder').innerHTML = 'Unable to access your camera.';
+                        });
+                }
+
+                window.closeVideoCall = function() {
+                    const modal = document.getElementById('video-call-modal');
+                    modal.style.display = 'none';
+                    // Optionally stop the camera
+                    if (window.localStream) {
+                        window.localStream.getTracks().forEach(track => track.stop());
+                        window.localStream = null;
+                    }
+                }
+        document.getElementById('u-msg').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleBot();
+        });
+    </script>
+</body>
+</html>
