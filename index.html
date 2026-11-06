@@ -324,6 +324,78 @@
                             </a>
                         </div>
                         <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">
+                                <button onclick="findNearestPoliceStation()" class="map-btn">Find Nearest Police Station</button>
+<div id="police-station-result"></div>
+
+<script>
+  const policeStations = [
+    { name: "Bengaluru City Police Station", lat: 12.9716, lng: 77.5946 },
+    { name: "Jayanagar Police Station", lat: 12.9255, lng: 77.5939 },
+    { name: "Koramangala Police Station", lat: 12.9352, lng: 77.6245 },
+    { name: "Indiranagar Police Station", lat: 12.9719, lng: 77.6412 },
+    { name: "Basavanagudi Police Station", lat: 12.9422, lng: 77.5711 }
+  ];
+
+  function toRadians(deg) {
+    return deg * (Math.PI / 180);
+  }
+
+  function getDistanceKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = toRadians(lat2 - lat1);
+    const dLng = toRadians(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(lat1)) *
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function findNearestPoliceStation() {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(function (position) {
+      const userLat = position.coords.latitude;
+      const userLng = position.coords.longitude;
+
+      const nearest = policeStations.reduce((best, station) => {
+        const dist = getDistanceKm(userLat, userLng, station.lat, station.lng);
+        if (!best || dist < best.distance) {
+          return { ...station, distance: dist };
+        }
+        return best;
+      }, null);
+
+      const directionsUrl =
+        `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}` +
+        `&destination=${nearest.lat},${nearest.lng}&travelmode=driving`;
+
+      const resultBox = document.getElementById("police-station-result");
+      resultBox.innerHTML = `
+        <div class="glass-card" style="margin-top:20px; padding:20px; border-radius:16px; background: rgba(255,255,255,0.04);">
+          <h3 style="margin:0 0 8px; color:#00d2ff;">Nearest Police Station</h3>
+          <p style="margin:0; font-size:1.05rem;"><b>${nearest.name}</b></p>
+          <p style="margin:8px 0 0; opacity:0.8;">Approx. ${nearest.distance.toFixed(1)} km away</p>
+          <a href="${directionsUrl}" target="_blank">
+            <button style="margin-top:14px; background:#00d2ff; color:#000; border:none; border-radius:8px; padding:10px 18px; font-weight:bold; cursor:pointer;">
+              Get Directions
+            </button>
+          </a>
+        </div>
+      `;
+
+      window.open(directionsUrl, "_blank");
+    }, function () {
+      alert("Location access is required to find the nearest police station.");
+    });
+  }
+</script>
                             <button onclick="findNearestHospital()" style="background: #ff4b2b; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;">Nearest Hospital</button>
                             <button onclick="findNearbyPharmacy()" style="background: #00d2ff; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;">Nearby Pharmacy</button>
                             <button onclick="shareLocation()" style="background: #00d2ff; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;">Share Location</button>
